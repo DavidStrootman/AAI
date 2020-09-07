@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List, Optional, Tuple
-
+import operator
 
 def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:
     data: np.ndarray = np.genfromtxt(filename, delimiter=';', usecols=[1, 2, 3, 4, 5, 6, 7],
@@ -23,23 +23,59 @@ def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:
 
     return data, labels
 
-
 class DataPoint:
-    def __init__(self, classification: Optional[str], features: List):
+    def __init__(self, classification: Optional[str], distance: int):
         self.classification: str = classification
-        self.features: List[int] = features
+        self.distance: int = distance
 
-
+# Classifier algorithm that looks in the range of K nearest neighbours to determine what classification test_point is
 def k_nearest_neighbour(k: int, test_point: List[int], training_set: np.ndarray, labels):
-    normalize_features(training_set)
+    normalize_features(training_set)    # Normalize the training set for scoring
     data_point_list: List[Tuple[int, str]] = list((float('inf'), "") for _ in range(k))  # TODO: create empty datapoints or something to compare to
+    ordered_points: List = []
+    k_classifier_ratio: List = []
+
     for i, data_point in enumerate(training_set):
         distance: int = 0
+        # calculate score for datapoint
         for j, feature in enumerate(data_point):
-            distance += abs(feature - test_point[i])
-        for j, val in enumerate(data_point_list):
-            if distance < val[0]:
-                data_point_list[i] = (distance, labels[i])
+            distance += abs(feature - test_point[j])
+        ordered_points.append(DataPoint(data_labels[i], distance))
+
+    # create a list with sorted data point
+    ordered_points = sorted(ordered_points, key=operator.attrgetter("distance"))
+    classification_total_score: dict = {}
+    for label in get_label_classification(labels):
+        classification_total_score[label] = 0;
+    # get classifier ratio
+    for K in range(k):
+        ordered_points_k = ordered_points[:K]
+        classification_k_score: dict = {}
+        for label in get_label_classification(labels):
+            classification_k_score[label] = 0;
+        for data_point in ordered_points_k:
+            classification_k_score[data_point.classification] = 1 / data_point.distance # invert distance for the scoring with 1 / distance
+
+        classification_total_score[max(classification_k_score, key=classification_k_score.get)]+= 1
+    print(classification_total_score)
+
+
+
+
+
+        # Weet niet meer precies waarom we dit deden
+        # for j, val in enumerate(data_point_list):
+        #     if distance < val[0]:
+        #         data_point_list[i] = (distance, labels[i])
+
+# returns the recurring labels as list
+def get_label_classification(data_labels):
+    known_labels : list = []
+    for label in data_labels:
+        if not label in known_labels:
+            known_labels.append(label)
+    return known_labels
+
 
 
 def normalize_features(training_set) -> None:
@@ -56,4 +92,4 @@ def normalize_features(training_set) -> None:
 if __name__ == '__main__':
     data_set, data_labels = import_data('dataset1.csv', 2000)
     validation_set, _ = import_data('validation1.csv', 2001)
-    k_nearest_neighbour(4, data_set[0], validation_set, data_labels)
+    k_nearest_neighbour(10, data_set[0], validation_set, data_labels)
