@@ -1,6 +1,8 @@
 import numpy as np
 from typing import List, Optional, Tuple
+from collections import Counter
 import operator
+import math
 
 def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:
     data: np.ndarray = np.genfromtxt(filename, delimiter=';', usecols=[1, 2, 3, 4, 5, 6, 7],
@@ -23,73 +25,75 @@ def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:
 
     return data, labels
 
-class DataPoint:
-    def __init__(self, classification: Optional[str], distance: int):
-        self.classification: str = classification
-        self.distance: int = distance
-
 # Classifier algorithm that looks in the range of K nearest neighbours to determine what classification test_point is
 def k_nearest_neighbour(k: int, test_point: List[int], training_set: np.ndarray, labels):
-    normalize_features(training_set)    # Normalize the training set for scoring
     data_point_list: List[Tuple[int, str]] = list((float('inf'), "") for _ in range(k))  # TODO: create empty datapoints or something to compare to
-    ordered_points: List = []
-    k_classifier_ratio: List = []
 
     for i, data_point in enumerate(training_set):
         distance: int = 0
         # calculate score for datapoint
         for j, feature in enumerate(data_point):
-            distance += abs(feature - test_point[j])
-        ordered_points.append(DataPoint(data_labels[i], distance))
-
-    # create a list with sorted data point
-    ordered_points = sorted(ordered_points, key=operator.attrgetter("distance"))
-    classification_total_score: dict = {}
-    for label in get_label_classification(labels):
-        classification_total_score[label] = 0;
-    # get classifier ratio
-    for K in range(k):
-        ordered_points_k = ordered_points[:K]
-        classification_k_score: dict = {}
-        for label in get_label_classification(labels):
-            classification_k_score[label] = 0;
-        for data_point in ordered_points_k:
-            classification_k_score[data_point.classification] = 1 / data_point.distance # invert distance for the scoring with 1 / distance
-
-        classification_total_score[max(classification_k_score, key=classification_k_score.get)]+= 1
-    print(classification_total_score)
+            distance += abs(pow(int(feature - test_point[j]), 2))
+        distance = math.sqrt(distance)
+        for j, val in enumerate(data_point_list):
+            if distance < val[0]:
+                data_point_list[j] = (distance, labels[i])
+                break
+        
+    output_list = []
+    for item in data_point_list:
+        output_list.append(item[1])
+        
+        
+    count = Counter(output_list)
+    if len(count) > 1:
+        most_common = count.most_common(2)[0][0]
+        return most_common
+    return count.most_common(1)[0][0]
 
 
+def normalize_features(data_set, input_values=None) -> List[int]:
+    max_values = []
 
-
-
-        # Weet niet meer precies waarom we dit deden
-        # for j, val in enumerate(data_point_list):
-        #     if distance < val[0]:
-        #         data_point_list[i] = (distance, labels[i])
-
-# returns the recurring labels as list
-def get_label_classification(data_labels):
-    known_labels : list = []
-    for label in data_labels:
-        if not label in known_labels:
-            known_labels.append(label)
-    return known_labels
-
-
-
-def normalize_features(training_set) -> None:
-    for i in range(len(training_set[0])):  # first data point
+    for i in range(len(data_set[0])):  # first data point
         feature_max = 0
-        for data_point in training_set:
+        for data_point in data_set:
             value = data_point[i]
             feature_max = value if value > feature_max else feature_max
-
-        for data_point in training_set:
+        if input_values:
+            feature_max = input_values[i] if input_values[i] > feature_max else feature_max
+        for data_point in data_set:
             data_point[i] *= 100 / feature_max
+        max_values.append(feature_max)
+    return max_values
+        
+        
+        
 
 
 if __name__ == '__main__':
     data_set, data_labels = import_data('dataset1.csv', 2000)
-    validation_set, _ = import_data('validation1.csv', 2001)
-    k_nearest_neighbour(10, data_set[0], validation_set, data_labels)
+    validation_set, validation_labels = import_data('validation1.csv', 2001)
+    days_set, _ = import_data('days.csv', 0)
+    highest_k = 0
+    highest_value = 0
+    normalize_range = normalize_features(data_set)
+    normalize_features(validation_set, normalize_range)
+    for k in range (1, len(validation_set)):
+        classifications = []
+        for i in range(len(validation_set)):
+            classifications.append(k_nearest_neighbour(k=k, test_point=validation_set[i], training_set=data_set, labels=data_labels))
+
+        matches = 0
+        for i, c in enumerate(classifications):
+            if classifications[i] == validation_labels[i]:
+                matches += 1
+        res = matches * 100 / len(validation_labels) 
+        if res > highest_value:
+            highest_value = res
+            highest_k = k
+    print("k:", highest_k, " value:", int(highest_value), "%")
+    out = []
+    for test_point in days_set:
+        out.append(k_nearest_neighbour(highest_k, test_point, data_set, data_labels))
+    print(out)
