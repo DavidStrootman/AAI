@@ -18,7 +18,7 @@ def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:
                                                  7: lambda s: 0 if s == b"-1" else float(s)})
 
     dates: np.ndarray = np.genfromtxt(filename, delimiter=';', usecols=[0])
-    labels = []
+    labels: List[str] = []
     for label in dates:
         if label < int(str(year) + '0301'):
             labels.append('winter')
@@ -34,7 +34,7 @@ def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:
     return data, labels
 
 
-def k_nearest_neighbour(k: int, t_point: List[int], training_set: np.ndarray, labels: List[str]):
+def k_nearest_neighbour(k: int, t_point: List[int], training_set: np.ndarray, labels: List[str]) -> str:
     """calculates the k nearest neighbour points to t_point from training_set
 
     Args:
@@ -48,25 +48,23 @@ def k_nearest_neighbour(k: int, t_point: List[int], training_set: np.ndarray, la
     """
     data_point_list: List[Tuple[int, str]] = list((float('inf'), "") for _ in range(k))
 
-    for i, data_point in enumerate(training_set):
+    for data_point_index, data_point in enumerate(training_set):
         distance: int = 0
         # calculate score for datapoint
-        for j, feature in enumerate(data_point):
-            distance += pow(feature - t_point[j], 2)
-        for j, val in enumerate(data_point_list):
+        for feature_index, feature in enumerate(data_point):
+            distance += pow(feature - t_point[feature_index], 2)
+        for val_index, val in enumerate(data_point_list):
             if distance < val[0]:
-                data_point_list[j] = (distance, labels[i])
+                data_point_list[val_index] = (distance, labels[data_point_index])
                 break
 
     output_list: List = []
-    for item in data_point_list:
-        output_list.append(item[1])
+    for point in data_point_list:
+        output_list.append(point[1])
 
-    count = Counter(output_list)
-    if len(count) > 1:
-        most_common = count.most_common(2)[0][0]
-        return most_common
-    return count.most_common(1)[0][0]
+    count = Counter(output_list)  # create a counter object which counts occurrences in list
+
+    return count.most_common(1)[0][0]  # return the most common classifier
 
 
 def normalize_features(d_set: np.ndarray, input_values: Optional[List[float]] = None) -> List[float]:
@@ -83,15 +81,15 @@ def normalize_features(d_set: np.ndarray, input_values: Optional[List[float]] = 
     """
     max_values: List[float] = []
 
-    for i in range(len(d_set[0])):  # first data point
+    for feature_index in range(len(d_set[0])):  # first data point
         feature_max: float = 0
         for data_point in d_set:
-            value = data_point[i]
+            value = data_point[feature_index]
             feature_max = value if value > feature_max else feature_max
         if input_values:
-            feature_max = input_values[i]
+            feature_max = input_values[feature_index]
         for data_point in d_set:
-            data_point[i] *= 100 / feature_max
+            data_point[feature_index] *= 100 / feature_max
         max_values.append(feature_max)
     return max_values
 
@@ -112,13 +110,13 @@ def find_best_k(v_set: np.ndarray, v_labels: List[str], t_set: np.ndarray, t_lab
     highest_value: float = 0
     for k in range(1, len(v_set)):
         classifications = []
-        for i in range(len(v_set)):
-            classifications.append(k_nearest_neighbour(k, v_set[i],
+        for validation_point in v_set:
+            classifications.append(k_nearest_neighbour(k, validation_point,
                                                        t_set, t_labels))
 
         matches: int = 0
-        for i, c in enumerate(classifications):
-            if classifications[i] == v_labels[i]:
+        for classification_index, _ in enumerate(classifications):
+            if classifications[classification_index] == v_labels[classification_index]:
                 matches += 1
         res: float = matches * 100 / len(v_labels)
         if res > highest_value:
