@@ -33,8 +33,7 @@ def k_nearest_neighbour(k: int, test_point: List[int], training_set: np.ndarray,
         distance: int = 0
         # calculate score for datapoint
         for j, feature in enumerate(data_point):
-            distance += abs(pow(int(feature - test_point[j]), 2))
-        distance = math.sqrt(distance)
+            distance += pow(int(feature - test_point[j]), 2)
         for j, val in enumerate(data_point_list):
             if distance < val[0]:
                 data_point_list[j] = (distance, labels[i])
@@ -61,14 +60,11 @@ def normalize_features(data_set, input_values=None) -> List[int]:
             value = data_point[i]
             feature_max = value if value > feature_max else feature_max
         if input_values:
-            feature_max = input_values[i] if input_values[i] > feature_max else feature_max
+            feature_max = input_values[i]
         for data_point in data_set:
             data_point[i] *= 100 / feature_max
         max_values.append(feature_max)
     return max_values
-        
-        
-        
 
 
 if __name__ == '__main__':
@@ -77,8 +73,11 @@ if __name__ == '__main__':
     days_set, _ = import_data('days.csv', 0)
     highest_k = 0
     highest_value = 0
+
     normalize_range = normalize_features(data_set)
     normalize_features(validation_set, normalize_range)
+    normalize_features(days_set, normalize_range)
+
     for k in range (1, len(validation_set)):
         classifications = []
         for i in range(len(validation_set)):
