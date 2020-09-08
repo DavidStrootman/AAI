@@ -33,7 +33,7 @@ def k_nearest_neighbour(k: int, test_point: List[int], training_set: np.ndarray,
         distance: int = 0
         # calculate score for datapoint
         for j, feature in enumerate(data_point):
-            distance += pow(int(feature - test_point[j]), 2)
+            distance += pow(feature - test_point[j], 2)
         for j, val in enumerate(data_point_list):
             if distance < val[0]:
                 data_point_list[j] = (distance, labels[i])
