@@ -3,7 +3,16 @@ from typing import List, Optional, Tuple
 from collections import Counter
 
 
-def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:
+def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:  
+    """ import a csv file for use by k_nn
+
+    Args:
+        filename (str): name of the file to import
+        year (int): the year the data in the file is from
+
+    Returns:
+        Tuple[np.ndarray, List[str]]: ndarray containing data and a list containing classifications
+    """
     data: np.ndarray = np.genfromtxt(filename, delimiter=';', usecols=[1, 2, 3, 4, 5, 6, 7],
                                      converters={5: lambda s: 0 if s == b"-1" else float(s),
                                                  7: lambda s: 0 if s == b"-1" else float(s)})
