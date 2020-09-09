@@ -108,7 +108,7 @@ def find_best_k(v_set: np.ndarray, v_labels: List[str], t_set: np.ndarray, t_lab
     """
     highest_k: int = 0
     highest_value: float = 0
-    for k in range(1, len(v_set)):
+    for k in range(1, 101):
         classifications = []
         for validation_point in v_set:
             classifications.append(k_nearest_neighbour(k, validation_point,
