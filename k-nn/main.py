@@ -68,6 +68,7 @@ def k_nearest_neighbour(k: int, t_point: List[int], training_set: np.ndarray, la
 
 
 def normalize_features(d_set: np.ndarray, input_values: Optional[List[float]] = None) -> List[float]:
+    
     """ normalize any data set to a percentage range (0-100)
     if input_values is specified, it will use these values as the maximum of the range
 
@@ -95,6 +96,7 @@ def normalize_features(d_set: np.ndarray, input_values: Optional[List[float]] = 
 
 
 def find_best_k(v_set: np.ndarray, v_labels: List[str], t_set: np.ndarray, t_labels: List[str]):
+    
     """find the best k in range of validation set
 
     Args:
