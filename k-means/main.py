@@ -1,10 +1,12 @@
 import numpy as np
 import random
+from collections import Counter
+from copy import copy
 from typing import List, Tuple, Optional
 
 
 class DataPoint:
-    def __init__(self, features: List, classification: str=None):
+    def __init__(self, features: List, classification: str = None):
         self.features = features
         self.classification = classification
 
@@ -47,7 +49,6 @@ def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:
 
 
 def find_nearest_cluster(d_point: DataPoint, clusters: List[Cluster]) -> Cluster:
-    # TODO: update function to return cluster instead of centroid
     nearest_cluster = None
     shortest_distance = float('inf')
 
@@ -62,60 +63,139 @@ def find_nearest_cluster(d_point: DataPoint, clusters: List[Cluster]) -> Cluster
     return nearest_cluster
 
 
-def k_means(k: int, training_set: List[DataPoint], in_clusters: Optional[List[Cluster]] = None):
+def k_means(k: int = None, training_set: List[DataPoint] = None, in_clusters: Optional[List[Cluster]] = None):
     changes = False
-    # centroids: List[DataPoint] = []
     clusters = in_clusters
-    if not clusters:
-        clusters: List[Cluster ]= []
-    for _ in range(k):
-        # TODO: might be worthwhile to make sure the same point does not get chosen twice
-        clusters.append(Cluster(random.choice(training_set), []))
-    for point in training_set:
-        nearest_cluster = find_nearest_cluster(point, clusters)
-        nearest_cluster.data_points.append(point)
 
+    if not clusters:
+        # Initial run
+        # Distribute data points from training set
+        clusters: List[Cluster] = []
+        chosen_points = []
+        for _ in range(k):
+            while True:  # Simulated do while loop
+                random_point = random.choice(training_set)
+                if random_point not in chosen_points:
+                    clusters.append(Cluster(copy(random_point), []))
+                    chosen_points.append(random_point)
+                    break
+        for point in training_set:
+            nearest_cluster = find_nearest_cluster(point, clusters)
+            nearest_cluster.data_points.append(point)
+    else:
+        # subsequent runs
+        # Move data points between clusters based on new nearest centroid
+        for cluster in clusters:
+            for point in cluster.data_points:
+                nearest_cluster = find_nearest_cluster(point, clusters)
+                if nearest_cluster is not cluster:
+                    cluster.data_points.remove(point)
+                    nearest_cluster.data_points.append(point)
+                    changes = True
+
+    # Recalculate centroids
     for cluster_index, cluster in enumerate(clusters):
         feature_list = [0 for _ in range(len(cluster.centroid.features))]
         for point in cluster.data_points:
             for feature_index, feature_val in enumerate(point.features):
                 feature_list[feature_index] += feature_val
-                
-        clusters[cluster_index].centroid.features = [value / len(cluster.centroid.features) for value in feature_list]  # set centroid to mean of data points
 
+        clusters[cluster_index].centroid.features = [value / len(cluster.data_points) for value in feature_list]  # set centroid to mean of data points
     return clusters, changes
 
 
-def normalize_features(d_set: np.ndarray):
-    # (): For some reason this line fixes a bug in liveshare that causes docstrings to be inverted
+# def normalize_features(d_set: np.ndarray):
+#     # (): For some reason this line fixes a bug in liveshare that causes docstrings to be inverted
+#     """ normalize any data set to a percentage range (0-100)
+#     if input_values is specified, it will use these values as the maximum of the range
+#
+#     Args:
+#         d_set (np.ndarray): data set to normalize
+#     """
+#     for feature_index in range(len(d_set[0])):  # first data point
+#         feature_max: float = 0
+#         for point in d_set:
+#             value = point[feature_index]
+#             feature_max = value if value > feature_max else feature_max
+#         for point in d_set:
+#             point[feature_index] *= 100 / feature_max
+
+def normalize_features(d_set: np.ndarray, input_values: Optional[List[float]] = None) -> List[float]:
     """ normalize any data set to a percentage range (0-100)
     if input_values is specified, it will use these values as the maximum of the range
 
     Args:
         d_set (np.ndarray): data set to normalize
+        input_values (List[float], optional): optional list of maximums to overwrite data_set maximum values.
+            Defaults to None.
+
+    Returns:
+        List[float]: list of feature maximum values
     """
+    max_values: List[float] = []
+
     for feature_index in range(len(d_set[0])):  # first data point
         feature_max: float = 0
-        for point in d_set:
-            value = point[feature_index]
+        for data_point in d_set:
+            value = data_point[feature_index]
             feature_max = value if value > feature_max else feature_max
-        for point in d_set:
-            point[feature_index] *= 100 / feature_max
+        if input_values:
+            feature_max = input_values[feature_index]
+        for data_point in d_set:
+            data_point[feature_index] *= 100 / feature_max
+            data_point[feature_index] = int(data_point[feature_index])
+        max_values.append(feature_max)
+    return max_values
 
 
 if __name__ == "__main__":
+    # seed random
+    random.seed(0)
     # import data sets
     data_set, data_labels = import_data('dataset1.csv', 2000)
+    validation_set, validation_labels = import_data('validation1.csv', 2001)
 
     # normalize data
-    normalize_features(data_set)
+    max_values = normalize_features(data_set)
+    normalize_features(validation_set, max_values)
+
     data_set = list(data_set)
+    validation_set = list(validation_set)
+
     for data_point_index, data_point in enumerate(data_set):
         data_set[data_point_index] = DataPoint(data_point, data_labels[data_point_index])
 
-    clusters, changes_occurred = k_means(4, data_set)
+    for validation_point_index, validation_point in enumerate(validation_set):
+        validation_set[validation_point_index] = DataPoint(validation_point,
+                                                           validation_labels[validation_point_index])
+    for k in range(1, 31):
+        clusters, _ = k_means(k=k, training_set=data_set)
 
-    for cluster_index, cluster in enumerate(clusters):
-        print("############# CLUSTER " + str(cluster_index) + " START #############")
-        for point in cluster.data_points:
-            print(point.classification)
+        while True:  # simulated do while loop
+            clusters, changes_occurred = k_means(in_clusters=clusters)
+            if not changes_occurred:
+                break
+
+        for cluster in clusters:
+            point_classifications = []
+            for point in cluster.data_points:
+                point_classifications.append(point.classification)
+            counter = Counter(point_classifications)
+
+            most_common_classification = counter.most_common(1)
+            cluster.centroid.classification = most_common_classification[0][0]
+            # cluster.centroid.classification = most_common_classification[0][0] if len(most_common) > 0 else None
+
+        matches = 0
+        for validation_point in validation_set:
+            nearest_classification = find_nearest_cluster(validation_point, clusters).centroid.classification
+            if validation_point.classification is nearest_classification:
+                matches += 1
+
+        print(matches * 100 / len(validation_set))
+
+        # for cluster_index, cluster in enumerate(clusters):
+        #     print("############# CLUSTER " + str(cluster_index) + " START #############")
+        #     for point in cluster.data_points:
+        #         print(point.classification)
+
