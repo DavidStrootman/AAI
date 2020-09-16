@@ -104,22 +104,6 @@ def k_means(k: int = None, training_set: List[DataPoint] = None, in_clusters: Op
     return clusters, changes
 
 
-# def normalize_features(d_set: np.ndarray):
-#     # (): For some reason this line fixes a bug in liveshare that causes docstrings to be inverted
-#     """ normalize any data set to a percentage range (0-100)
-#     if input_values is specified, it will use these values as the maximum of the range
-#
-#     Args:
-#         d_set (np.ndarray): data set to normalize
-#     """
-#     for feature_index in range(len(d_set[0])):  # first data point
-#         feature_max: float = 0
-#         for point in d_set:
-#             value = point[feature_index]
-#             feature_max = value if value > feature_max else feature_max
-#         for point in d_set:
-#             point[feature_index] *= 100 / feature_max
-
 def normalize_features(d_set: np.ndarray, input_values: Optional[List[float]] = None) -> List[float]:
     """ normalize any data set to a percentage range (0-100)
     if input_values is specified, it will use these values as the maximum of the range
