@@ -149,39 +149,53 @@ if __name__ == "__main__":
     data_set = list(data_set)
     validation_set = list(validation_set)
 
+    #intra cluster distance plot data
+    intra_cluster_distances = []
+    k_sizes = []
+
+
     for data_point_index, data_point in enumerate(data_set):
         data_set[data_point_index] = DataPoint(data_point, data_labels[data_point_index])
 
     for validation_point_index, validation_point in enumerate(validation_set):
-        validation_set[validation_point_index] = DataPoint(validation_point,
-    for                                                        validation_labels[validation_point_index])
-        for k in range(1, 31):
-            clusters, _ = k_means(k=k, training_set=data_set)
+        validation_set[validation_point_index] = DataPoint(validation_point, validation_labels[validation_point_index])
+    
+    for k in range(1, 31):
+        clusters, _ = k_means(k=k, training_set=data_set)
+        intra_cluster_distance = 0
+        while True:  # simulated do while loop
+            clusters, changes_occurred = k_means(in_clusters=clusters)
+            if not changes_occurred:
+                break
 
-            while True:  # simulated do while loop
-                clusters, changes_occurred = k_means(in_clusters=clusters)
-                if not changes_occurred:
-                    break
+        for cluster in clusters:
+            point_classifications = []
+            for point in cluster.data_points:
+                point_classifications.append(point.classification)
+                for i, feature in enumerate(point.features):
+                    intra_cluster_distance += (feature - cluster.centroid.features[i])**2
 
-            for cluster in clusters:
-                point_classifications = []
-                for point in cluster.data_points:
-                    point_classifications.append(point.classification)
-                counter = Counter(point_classifications)
+            counter = Counter(point_classifications)
 
-                most_common_classification = counter.most_common(1)
-                cluster.centroid.classification = most_common_classification[0][0]
-                # cluster.centroid.classification = most_common_classification[0][0] if len(most_common) > 0 else None
+            most_common_classification = counter.most_common(1)
+            cluster.centroid.classification = most_common_classification[0][0]
+            # cluster.centroid.classification = most_common_classification[0][0] if len(most_common) > 0 else None
 
-            matches = 0
-            for validation_point in validation_set:
-                nearest_classification = find_nearest_cluster(validation_point, clusters).centroid.classification
-                if validation_point.classification is nearest_classification:
-                    matches += 1
+        matches = 0
+        for validation_point in validation_set:
+            nearest_classification = find_nearest_cluster(validation_point, clusters).centroid.classification
+            if validation_point.classification is nearest_classification:
+                matches += 1
 
-            print(matches * 100 / len(validation_set))
-
-            # for cluster_index, cluster in enumerate(clusters):
-            #     print("############# CLUSTER " + str(cluster_index) + " START #############")
-            #     for point in cluster.data_points:
-            #         print(point.classification)
+        print(matches * 100 / len(validation_set))
+        print(intra_cluster_distance )
+        intra_cluster_distances.append(intra_cluster_distance)
+        k_sizes.append(k)
+        # for cluster_index, cluster in enumerate(clusters):
+        #     print("############# CLUSTER " + str(cluster_index) + " START #############")
+        #     for point in cluster.data_points:
+        #         print(point.classification)
+    plt.plot(k_sizes, intra_cluster_distances)
+    plt.ylabel("Intra cluster distance")
+    plt.xlabel("K")
+    plt.show()
