@@ -3,6 +3,8 @@ import random
 from collections import Counter
 from copy import copy
 from typing import List, Tuple, Optional
+import matplotlib.pyplot as plt
+
 
 
 class DataPoint:
@@ -105,6 +107,7 @@ def k_means(k: int = None, training_set: List[DataPoint] = None, in_clusters: Op
 
 
 def normalize_features(d_set: np.ndarray, input_values: Optional[List[float]] = None) -> List[float]:
+    # (): For some reason this line fixes a bug in liveshare that causes docstrings to be inverted
     """ normalize any data set to a percentage range (0-100)
     if input_values is specified, it will use these values as the maximum of the range
 
@@ -151,35 +154,34 @@ if __name__ == "__main__":
 
     for validation_point_index, validation_point in enumerate(validation_set):
         validation_set[validation_point_index] = DataPoint(validation_point,
-                                                           validation_labels[validation_point_index])
-    for k in range(1, 31):
-        clusters, _ = k_means(k=k, training_set=data_set)
+    for                                                        validation_labels[validation_point_index])
+        for k in range(1, 31):
+            clusters, _ = k_means(k=k, training_set=data_set)
 
-        while True:  # simulated do while loop
-            clusters, changes_occurred = k_means(in_clusters=clusters)
-            if not changes_occurred:
-                break
+            while True:  # simulated do while loop
+                clusters, changes_occurred = k_means(in_clusters=clusters)
+                if not changes_occurred:
+                    break
 
-        for cluster in clusters:
-            point_classifications = []
-            for point in cluster.data_points:
-                point_classifications.append(point.classification)
-            counter = Counter(point_classifications)
+            for cluster in clusters:
+                point_classifications = []
+                for point in cluster.data_points:
+                    point_classifications.append(point.classification)
+                counter = Counter(point_classifications)
 
-            most_common_classification = counter.most_common(1)
-            cluster.centroid.classification = most_common_classification[0][0]
-            # cluster.centroid.classification = most_common_classification[0][0] if len(most_common) > 0 else None
+                most_common_classification = counter.most_common(1)
+                cluster.centroid.classification = most_common_classification[0][0]
+                # cluster.centroid.classification = most_common_classification[0][0] if len(most_common) > 0 else None
 
-        matches = 0
-        for validation_point in validation_set:
-            nearest_classification = find_nearest_cluster(validation_point, clusters).centroid.classification
-            if validation_point.classification is nearest_classification:
-                matches += 1
+            matches = 0
+            for validation_point in validation_set:
+                nearest_classification = find_nearest_cluster(validation_point, clusters).centroid.classification
+                if validation_point.classification is nearest_classification:
+                    matches += 1
 
-        print(matches * 100 / len(validation_set))
+            print(matches * 100 / len(validation_set))
 
-        # for cluster_index, cluster in enumerate(clusters):
-        #     print("############# CLUSTER " + str(cluster_index) + " START #############")
-        #     for point in cluster.data_points:
-        #         print(point.classification)
-
+            # for cluster_index, cluster in enumerate(clusters):
+            #     print("############# CLUSTER " + str(cluster_index) + " START #############")
+            #     for point in cluster.data_points:
+            #         print(point.classification)
