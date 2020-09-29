@@ -17,12 +17,11 @@ class Input:
 
 class Neuron:
 
-    def __init__(self, previous_layer: list, next_layer: list, last_layer: bool):
+    def __init__(self, previous_layer: list, next_layer: list):
         self.bias = get_random()
         self.weights = []
         self.a = 0
         self.delta = 0
-        self.last = last_layer
         self.previous_layer = previous_layer
         self.next_layer = next_layer
 
@@ -74,7 +73,7 @@ def update_last_layer(last_layer: list, y_list: list):
             neuron.calculate_last(y_list[i])
 
 def train_network(input_layer, hidden_layers, last_layer, learning_constant, correct_output, itterations):
-    
+    itteration = 0
     for i in range(itterations):
         for hidden_layer in hidden_layers:
             feed_forward_layer(hidden_layer)
@@ -88,7 +87,12 @@ def train_network(input_layer, hidden_layers, last_layer, learning_constant, cor
 
         for i in last_layer:
             print(i.a)
-        print("=======")
+        print("======= "+ str(itteration) + " =======")
+        itteration += 1
+
+def set_input_layer(first_layer: list, input_data: list):
+    for i, neuron in enumerate(first_layer):
+        neuron.a = input_data[i]
 
 if __name__ == "__main__":
     
@@ -102,23 +106,39 @@ if __name__ == "__main__":
     first_layer.append(Input(0.0))
     first_layer.append(Input(0.0))
     first_layer.append(Input(0.0))
+    first_layer.append(Input(0.0))
+    first_layer.append(Input(0.0))
+    first_layer.append(Input(0.0))
+    first_layer.append(Input(0.0))
+
+    set_input_layer(first_layer, [0, 1, 0, 0.5, 0.2, 0.6, 0.2, 0.3, 0.5])
 
     #add hidden layer neurons
-    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2, False))
-    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2, False))
-    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2, False))
+    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
+    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
+    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
+    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
+    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
+    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
+
 
     #add hidden layer neurons
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer, False)) 
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer, False)) 
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer, False)) 
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer, False))
+    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
+    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
+    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
+    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer))
+    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
+    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
+    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
+    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer))
+    
     
     #add output layer neurons
-    last_layer.append(Neuron(hidden_layer_2, None, True))
-    last_layer.append(Neuron(hidden_layer_2, None, True))
-    last_layer.append(Neuron(hidden_layer_2, None, True))
+    last_layer.append(Neuron(hidden_layer_2, None))
+    last_layer.append(Neuron(hidden_layer_2, None))
+    last_layer.append(Neuron(hidden_layer_2, None))
+    last_layer.append(Neuron(hidden_layer_2, None))
 
-    correct_output = [1, 0, 1]
+    correct_output = [1, 0, 1, 0]
     train_network(first_layer, [hidden_layer_1, hidden_layer_2], last_layer, 0.1, correct_output, 100)
 
