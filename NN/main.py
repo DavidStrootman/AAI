@@ -33,6 +33,7 @@ class Neuron:
         self.a = 0
         for i, input_i in enumerate(self.previous_layer):
             self.a += self.weights[i] * input_i.a + self.bias
+        self.a = sigmoid(self.a)
 
     def calculate_last(self, y_value):
         self.delta = self.a * (y_value - self.a)
@@ -100,8 +101,8 @@ if __name__ == "__main__":
 
 
     correct_output = [1, 0, 1]
-    for i in range(20):
-        first_layer = [Input(0.1), Input(0.0)]
+    for i in range(1000):
+        first_layer = [Input(-0.5), Input(0.0)]
         feed_forward_layer(hidden_layer_1)
         feed_forward_layer(hidden_layer_2)
         feed_forward_layer(last_layer)
