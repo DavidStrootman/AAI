@@ -73,7 +73,22 @@ def update_last_layer(last_layer: list, y_list: list):
         for i, neuron in enumerate(last_layer):
             neuron.calculate_last(y_list[i])
 
+def train_network(input_layer, hidden_layers, last_layer, learning_constant, correct_output, itterations):
+    
+    for i in range(itterations):
+        for hidden_layer in hidden_layers:
+            feed_forward_layer(hidden_layer)
 
+        feed_forward_layer(last_layer)
+        update_last_layer(last_layer, correct_output)
+        update_weights_layer(last_layer, learning_constant)
+
+        for hidden_layer in hidden_layers:
+            update_weights_layer(hidden_layer, learning_constant)
+
+        for i in last_layer:
+            print(i.a)
+        print("=======")
 
 if __name__ == "__main__":
     
@@ -82,35 +97,28 @@ if __name__ == "__main__":
     hidden_layer_2 = []
     last_layer = []
 
+    #add input layer neurons
+    first_layer.append(Input(0.0))
+    first_layer.append(Input(0.0))
     first_layer.append(Input(0.0))
     first_layer.append(Input(0.0))
 
+    #add hidden layer neurons
     hidden_layer_1.append(Neuron(first_layer, hidden_layer_2, False))
     hidden_layer_1.append(Neuron(first_layer, hidden_layer_2, False))
     hidden_layer_1.append(Neuron(first_layer, hidden_layer_2, False))
 
+    #add hidden layer neurons
     hidden_layer_2.append(Neuron(hidden_layer_1, last_layer, False)) 
     hidden_layer_2.append(Neuron(hidden_layer_1, last_layer, False)) 
     hidden_layer_2.append(Neuron(hidden_layer_1, last_layer, False)) 
     hidden_layer_2.append(Neuron(hidden_layer_1, last_layer, False))
     
+    #add output layer neurons
     last_layer.append(Neuron(hidden_layer_2, None, True))
     last_layer.append(Neuron(hidden_layer_2, None, True))
     last_layer.append(Neuron(hidden_layer_2, None, True))
-
-
 
     correct_output = [1, 0, 1]
-    for i in range(1000):
-        first_layer = [Input(-0.5), Input(0.0)]
-        feed_forward_layer(hidden_layer_1)
-        feed_forward_layer(hidden_layer_2)
-        feed_forward_layer(last_layer)
-        update_last_layer(last_layer, correct_output)
-        update_weights_layer(last_layer, 0.01)
-        update_weights_layer(hidden_layer_2, 0.01)
-        update_weights_layer(hidden_layer_1, 0.01)
-        for i in last_layer:
-            print(i.a)
-        print("=======")
+    train_network(first_layer, [hidden_layer_1, hidden_layer_2], last_layer, 0.1, correct_output, 100)
 
