@@ -1,8 +1,9 @@
 import math
 import random
+import csv
 
 def sigmoid(x):
-  return 1 / (1 + math.exp(-x))
+  return 1 / (1 + math.e **-x)
 
 class Input:
     def __init__ (self, value):
@@ -35,7 +36,9 @@ class Neuron:
         self.a = sigmoid(self.a)
 
     def calculate_last(self, y_value):
-        self.delta = self.a * (y_value - self.a)
+        self.delta = 0.5*(y_value - self.a)**2
+        # print("========")
+        # print(0.5 * self.delta**2)
 
     def get_delta_weights_next_layer(self):
         value = 0
@@ -85,60 +88,134 @@ def train_network(input_layer, hidden_layers, last_layer, learning_constant, cor
         for hidden_layer in hidden_layers:
             update_weights_layer(hidden_layer, learning_constant)
 
-        for i in last_layer:
-            print(i.a)
-        print("======= "+ str(itteration) + " =======")
-        itteration += 1
+    # for i in last_layer:
+    #     print(i.a)
+
 
 def set_input_layer(first_layer: list, input_data: list):
     for i, neuron in enumerate(first_layer):
         neuron.a = input_data[i]
 
-if __name__ == "__main__":
+
+class DataSet:
+    def __init__(self, data_points: list, classifications: list):
+        self.data_points = data_points
+        self.classifications = classifications
+
+class DataPoint:
+    def __init__(self, attributes: list, classification_index: int):
+        self.attributes = attributes
+        self.classification_index = classification_index
+        if type(attributes[0]) == str:
+            for i, attribute in enumerate(attributes):
+                self.attributes[i] = float(attribute)
+
+
+def import_data_set():
+    data_set = []
+    classifications = []
+    with open("dataset.csv", newline='') as csvfile:
+        csv_file = csv.reader(csvfile, delimiter=' ')
+        for row in csv_file:
+            l = row[0].split(',')
+            if l[4] not in classifications:
+                classifications.append(l[4])
+            data_set.append(DataPoint(l[:4], classifications.index(l[4])))
+    return DataSet(data_set, classifications)
+
+def normalize_data(data_set: DataSet):
+    max_features = []
+    first_run = True
+    #get highest valiue for every feature
+    for data_point in data_set.data_points:
+        if first_run:
+            for feature in data_point.attributes:
+                max_features.append(feature)
+            first_run = False
+        else:
+            for index, feature in enumerate(data_point.attributes):
+                if feature >= max_features[index]:
+                    max_features[index] = feature
+    for data_point in data_set.data_points:
+        for index, feature in enumerate(data_point.attributes):
+            data_point.attributes[index] = feature / max_features[index]
+
+    return data_set
+
+
+
+def convert_to_output(index: int, list_size: int):
+    output = []
+    for i in range(list_size):
+        if i == index:
+            output.append(1)
+        else:
+            output.append(0)
+    return output
+            
+def feed_forward_result(attributes, first_layer, hidden_layers: list, last_layer):
+    set_input_layer(first_layer, attributes)
+    for hidden_layer in hidden_layers:
+            feed_forward_layer(hidden_layer)
+    feed_forward_layer(last_layer)
+    results = []
+    for neuron in last_layer:
+        results.append(int(neuron.a >= 0.5))
+    return results
     
+if __name__ == "__main__":
+
+
     first_layer = []
     hidden_layer_1 = []
     hidden_layer_2 = []
     last_layer = []
 
-    #add input layer neurons
+    data_set = import_data_set()
+    data_set = normalize_data(data_set)
+    #add input layer neurons for every attribute
     first_layer.append(Input(0.0))
     first_layer.append(Input(0.0))
     first_layer.append(Input(0.0))
     first_layer.append(Input(0.0))
-    first_layer.append(Input(0.0))
-    first_layer.append(Input(0.0))
-    first_layer.append(Input(0.0))
-    first_layer.append(Input(0.0))
-
-    set_input_layer(first_layer, [0, 1, 0, 0.5, 0.2, 0.6, 0.2, 0.3, 0.5])
 
     #add hidden layer neurons
-    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
-    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
-    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
-    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
-    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
-    hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
-
+    for nr_hidden_layers in range(8):
+        hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
 
     #add hidden layer neurons
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer))
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer)) 
-    hidden_layer_2.append(Neuron(hidden_layer_1, last_layer))
+    for nr_hidden_layers in range(8):
+        hidden_layer_2.append(Neuron(hidden_layer_1, last_layer))
+
     
-    
-    #add output layer neurons
-    last_layer.append(Neuron(hidden_layer_2, None))
+    #add output layer neurons fo every classification
     last_layer.append(Neuron(hidden_layer_2, None))
     last_layer.append(Neuron(hidden_layer_2, None))
     last_layer.append(Neuron(hidden_layer_2, None))
 
     correct_output = [1, 0, 1, 0]
-    train_network(first_layer, [hidden_layer_1, hidden_layer_2], last_layer, 0.1, correct_output, 100)
+
+    itteration = 0
+    samples = []
+    #training the network
+    for i in range(10000):
+        for data_point in data_set.data_points:
+            sample_output = convert_to_output(data_point.classification_index, len(data_set.classifications))
+            samples.append(sample_output)
+            set_input_layer(first_layer, data_point.attributes)
+            train_network(first_layer, [hidden_layer_1, hidden_layer_2], last_layer, 0.1, sample_output, 1)
+            itteration += 1
+        print("==========" + str(i))
+    hits = 0
+
+    #getting validation results
+    for i in range(len(data_set.data_points)):
+        result = feed_forward_result(data_set.data_points[i].attributes, first_layer, [hidden_layer_1, hidden_layer_2], last_layer)
+        
+        if samples[i] == result:
+            hits += 1
+    print(hits / len(data_set.data_points) * 100)
+        
+
+
 
