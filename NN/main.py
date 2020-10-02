@@ -185,6 +185,7 @@ if __name__ == "__main__":
 
     data_set = import_data_set()
     data_set = normalize_data(data_set)
+    
     #add input layer neurons for every attribute
     for nr_first_layers in range(4):
         first_layer.append(Input(0.0))
