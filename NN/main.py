@@ -29,16 +29,16 @@ class Neuron:
         for i in range(len(self.previous_layer)):
             self.weights.append(get_random())
 
-    def calculate_a(self):
+    def update_a(self):
         self.a = 0
         for i, input_i in enumerate(self.previous_layer):
             self.a += self.weights[i] * input_i.a + self.bias
         self.a = sigmoid(self.a)
 
     def calculate_last(self, y_value):
-        self.delta = 0.5*(y_value - self.a)**2
-        # print("========")
-        # print(0.5 * self.delta**2)
+        self.update_a()
+        self.delta = self.a * (y_value - self.a)
+        return (y_value - self.a)
 
     def get_delta_weights_next_layer(self):
         value = 0
@@ -48,9 +48,8 @@ class Neuron:
         return value
 
     def back_propegation(self):
-        for i, input_i in enumerate(self.previous_layer):
-            input_i.calculate_a()
-            input_i.delta = input_i.a * input_i.get_delta_weights_next_layer()
+        if self.next_layer is not None:
+            self.delta = self.a * self.get_delta_weights_next_layer()
 
     def update_weights(self, learning_constant: float):
         self.back_propegation()
@@ -65,15 +64,17 @@ def get_random():
 
 def feed_forward_layer(layer: list):
     for neuron in layer:
-        neuron.calculate_a()
+        neuron.update_a()
 
 def update_weights_layer(layer: list, learning_constant: float):
     for neuron in layer:
         neuron.update_weights(learning_constant)
 
 def update_last_layer(last_layer: list, y_list: list):
+        c = 0
         for i, neuron in enumerate(last_layer):
-            neuron.calculate_last(y_list[i])
+            c += neuron.calculate_last(y_list[i])
+        return c**2
 
 def train_network(input_layer, hidden_layers, last_layer, learning_constant, correct_output, itterations):
     itteration = 0
@@ -82,12 +83,12 @@ def train_network(input_layer, hidden_layers, last_layer, learning_constant, cor
             feed_forward_layer(hidden_layer)
 
         feed_forward_layer(last_layer)
-        update_last_layer(last_layer, correct_output)
+        c = update_last_layer(last_layer, correct_output)
         update_weights_layer(last_layer, learning_constant)
 
         for hidden_layer in hidden_layers:
             update_weights_layer(hidden_layer, learning_constant)
-
+    return c 
     # for i in last_layer:
     #     print(i.a)
 
@@ -152,7 +153,12 @@ def convert_to_output(index: int, list_size: int):
         else:
             output.append(0)
     return output
-            
+
+def print_weights(layer):
+    print("======================")
+    for node in layer:
+        print(node.weights)
+
 def feed_forward_result(attributes, first_layer, hidden_layers: list, last_layer):
     set_input_layer(first_layer, attributes)
     for hidden_layer in hidden_layers:
@@ -160,7 +166,7 @@ def feed_forward_result(attributes, first_layer, hidden_layers: list, last_layer
     feed_forward_layer(last_layer)
     results = []
     for neuron in last_layer:
-        results.append(int(neuron.a >= 0.5))
+        results.append(neuron.a)
     return results
     
 if __name__ == "__main__":
@@ -180,11 +186,11 @@ if __name__ == "__main__":
     first_layer.append(Input(0.0))
 
     #add hidden layer neurons
-    for nr_hidden_layers in range(8):
+    for nr_hidden_layers in range(2):
         hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
 
     #add hidden layer neurons
-    for nr_hidden_layers in range(8):
+    for nr_hidden_layers in range(2):
         hidden_layer_2.append(Neuron(hidden_layer_1, last_layer))
 
     
@@ -198,22 +204,26 @@ if __name__ == "__main__":
     itteration = 0
     samples = []
     #training the network
-    for i in range(10000):
-        for data_point in data_set.data_points:
-            sample_output = convert_to_output(data_point.classification_index, len(data_set.classifications))
-            samples.append(sample_output)
-            set_input_layer(first_layer, data_point.attributes)
-            train_network(first_layer, [hidden_layer_1, hidden_layer_2], last_layer, 0.1, sample_output, 1)
-            itteration += 1
+    for i in range(1000):
+        data_point = random.choice(data_set.data_points)
+        sample_output = convert_to_output(data_point.classification_index, len(data_set.classifications))
+        set_input_layer(first_layer, data_point.attributes)
+        c = train_network(first_layer, [hidden_layer_1, hidden_layer_2], last_layer, 0.05, sample_output, 1)
+        itteration += 1
+        print(c)
         print("==========" + str(i))
     hits = 0
 
     #getting validation results
+
+    print_weights(hidden_layer_1)
+    print_weights(hidden_layer_2)
+    print_weights(last_layer)
     for i in range(len(data_set.data_points)):
         result = feed_forward_result(data_set.data_points[i].attributes, first_layer, [hidden_layer_1, hidden_layer_2], last_layer)
-        
-        if samples[i] == result:
-            hits += 1
+        print(result)
+        # if convert_to_output() == result:
+        #     hits += 1
     print(hits / len(data_set.data_points) * 100)
         
 
