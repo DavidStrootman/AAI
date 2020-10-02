@@ -2,9 +2,6 @@ import math
 import random
 import csv
 
-
-
-#afgeldien is a(1-a)
 def sigmoid(x):
   return 1 / (1 + math.e **-x)
 
@@ -31,7 +28,7 @@ class Neuron:
         self.next_layer = next_layer
 
         for i in range(len(self.previous_layer)):
-            self.weights.append(get_random())
+            self.weights.append(random.randrange(-100, 100, 1) /100)
 
     def update_a(self):
         self.a = 0
@@ -62,26 +59,53 @@ class Neuron:
             self.weights[i] += learning_constant * self.delta * input_i.a
         self.bias += self.delta * learning_constant
 
-
-def get_random():
-    return random.randrange(-100, 100, 1) /100
-
-
 def feed_forward_layer(layer: list):
+    """Executes feed forward on selected neuron list
+
+    Args:
+        layer (list): A list with neurons
+    """
     for neuron in layer:
         neuron.update_a()
 
 def update_weights_layer(layer: list, learning_constant: float):
+    """Executes weight update on selected neuron list
+
+    Args:
+        layer (list): A list with neurons
+        learning_constant (float): the constant that should be multiplied with the outcome of the weight update value
+    """
     for neuron in layer:
         neuron.update_weights(learning_constant)
 
 def update_last_layer(last_layer: list, y_list: list):
-        c = 0
-        for i, neuron in enumerate(last_layer):
-            c += neuron.calculate_last(y_list[i])
-        return c**2
+    """Executes update last layer on selected last layer 
+
+    Args:
+        last_layer (list): A list with neurons
+        y_list (list): A list with output values with the size of last_layer
+
+    Returns:
+        C: Error value
+    """
+    c = 0
+    for i, neuron in enumerate(last_layer):
+        c += neuron.calculate_last(y_list[i])
+    return c**2
 
 def train_network_session(input_layer, hidden_layers, last_layer, learning_constant, correct_output):
+    """[summary]
+
+    Args:
+        input_layer ([type]): [description]
+        hidden_layers ([type]): [description]
+        last_layer ([type]): [description]
+        learning_constant ([type]): [description]
+        correct_output ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
  
     for hidden_layer in hidden_layers:
         feed_forward_layer(hidden_layer)
@@ -96,17 +120,20 @@ def train_network_session(input_layer, hidden_layers, last_layer, learning_const
     for i in last_layer:
         print(i.a)
 
-def train_network(input_layer, hidden_layers, last_layer):
-    correct_output = []
+def train_network(input_layer, hidden_layers, last_layer, data_set, sessions):
+    """[summary]
 
+    Args:
+        input_layer ([type]): [description]
+        hidden_layers ([type]): [description]
+        last_layer ([type]): [description]
+    """
+    correct_output = []
     itteration = 0
     samples = []
-    #training the network
     c = 1
     learning_constant = 0.1
-    i = 0
-    while i < 1000:
-        i += 1
+    for i in range(sessions):
         last_c = c
         c= 0
 
@@ -141,6 +168,12 @@ def train_network(input_layer, hidden_layers, last_layer):
 
 
 def set_input_layer(first_layer: list, input_data: list):
+    """[summary]
+
+    Args:
+        first_layer (list): [description]
+        input_data (list): [description]
+    """
     for i, neuron in enumerate(first_layer):
         neuron.a = input_data[i]
 
@@ -160,6 +193,11 @@ class DataPoint:
 
 
 def import_data_set():
+    """[summary]
+
+    Returns:
+        [type]: [description]
+    """
     data_set = []
     classifications = []
     with open("dataset.csv", newline='') as csvfile:
@@ -172,6 +210,14 @@ def import_data_set():
     return DataSet(data_set, classifications)
 
 def normalize_data(data_set: DataSet):
+    """[summary]
+
+    Args:
+        data_set (DataSet): [description]
+
+    Returns:
+        [type]: [description]
+    """
     max_features = []
     first_run = True
     #get highest valiue for every feature
@@ -190,9 +236,16 @@ def normalize_data(data_set: DataSet):
 
     return data_set
 
-
-
 def convert_to_output(index: int, list_size: int):
+    """[summary]
+
+    Args:
+        index (int): [description]
+        list_size (int): [description]
+
+    Returns:
+        [type]: [description]
+    """
     output = []
     for i in range(list_size):
         if i == index:
@@ -202,12 +255,28 @@ def convert_to_output(index: int, list_size: int):
     return output
 
 def print_weights(layers):
+    """[summary]
+
+    Args:
+        layers ([type]): [description]
+    """
     for layer in layers:
         print("======================")
         for node in layer:
             print(node.weights)
 
 def feed_forward_result(attributes, first_layer, hidden_layers: list, last_layer):
+    """[summary]
+
+    Args:
+        attributes ([type]): [description]
+        first_layer ([type]): [description]
+        hidden_layers (list): [description]
+        last_layer ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
     set_input_layer(first_layer, attributes)
     for hidden_layer in hidden_layers:
             feed_forward_layer(hidden_layer)
@@ -243,7 +312,7 @@ if __name__ == "__main__":
     for nr_output_layers in range(3):
         last_layer.append(Neuron(hidden_layer_2, None))
 
-    train_network(first_layer, [hidden_layer_1, hidden_layer_2], last_layer)
+    train_network(first_layer, [hidden_layer_1, hidden_layer_2], last_layer, data_set, 5000)
         
 
 
