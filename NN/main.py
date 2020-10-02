@@ -81,21 +81,63 @@ def update_last_layer(last_layer: list, y_list: list):
             c += neuron.calculate_last(y_list[i])
         return c**2
 
-def train_network(input_layer, hidden_layers, last_layer, learning_constant, correct_output, itterations):
-    itteration = 0
-    for i in range(itterations):
-        for hidden_layer in hidden_layers:
-            feed_forward_layer(hidden_layer)
+def train_network_session(input_layer, hidden_layers, last_layer, learning_constant, correct_output):
+ 
+    for hidden_layer in hidden_layers:
+        feed_forward_layer(hidden_layer)
 
-        feed_forward_layer(last_layer)
-        c = update_last_layer(last_layer, correct_output)
-        update_weights_layer(last_layer, learning_constant)
+    feed_forward_layer(last_layer)
+    c = update_last_layer(last_layer, correct_output)
+    update_weights_layer(last_layer, learning_constant)
 
-        for hidden_layer in hidden_layers:
-            update_weights_layer(hidden_layer, learning_constant)
+    for hidden_layer in hidden_layers:
+        update_weights_layer(hidden_layer, learning_constant)
     return c 
     for i in last_layer:
         print(i.a)
+
+def train_network(input_layer, hidden_layers, last_layer):
+    correct_output = []
+
+    itteration = 0
+    samples = []
+    #training the network
+    c = 1
+    learning_constant = 0.1
+    i = 0
+    while i < 1000:
+        i += 1
+        last_c = c
+        c= 0
+
+        for data_point in data_set.data_points:
+            sample_output = convert_to_output(data_point.classification_index, len(data_set.classifications))
+            samples.append(sample_output)
+            set_input_layer(first_layer, data_point.attributes)
+            c += train_network_session(first_layer, hidden_layers, last_layer, learning_constant, sample_output)
+        itteration += 1
+        print("==========" + str(i))
+        
+        #change learning constant based on error
+        if c / len(data_set.data_points) > 0.001:
+            if not learning_constant > 5.0:
+                learning_constant += 0.01
+        else:
+            if learning_constant > 0.04:
+                learning_constant /= 4
+        print("Learning constant: ", learning_constant)
+        print("Error value:       ", c / len(data_set.data_points))
+
+    hits = 0
+    #getting validation results
+    for i in range(len(data_set.data_points)):
+        result = feed_forward_result(data_set.data_points[i].attributes, first_layer, hidden_layers, last_layer)
+        print("===================")
+        print("result:   ", result)
+        print("Expected: ", samples[i])
+        if samples[i] == result:
+            hits += 1
+    print("Score: ", hits / len(data_set.data_points) * 100)
 
 
 def set_input_layer(first_layer: list, input_data: list):
@@ -177,7 +219,6 @@ def feed_forward_result(attributes, first_layer, hidden_layers: list, last_layer
     
 if __name__ == "__main__":
 
-
     first_layer = []
     hidden_layer_1 = []
     hidden_layer_2 = []
@@ -185,16 +226,16 @@ if __name__ == "__main__":
 
     data_set = import_data_set()
     data_set = normalize_data(data_set)
-    
+
     #add input layer neurons for every attribute
     for nr_first_layers in range(4):
         first_layer.append(Input(0.0))
 
-    #add hidden layer neurons
+    #add hidden layer 1 neurons
     for nr_hidden_layers in range(4):
         hidden_layer_1.append(Neuron(first_layer, hidden_layer_2))
 
-    #add hidden layer neurons
+    #add hidden layer 2 neurons
     for nr_hidden_layers in range(4):
         hidden_layer_2.append(Neuron(hidden_layer_1, last_layer))
 
@@ -202,51 +243,7 @@ if __name__ == "__main__":
     for nr_output_layers in range(3):
         last_layer.append(Neuron(hidden_layer_2, None))
 
-    correct_output = []
-
-    itteration = 0
-    samples = []
-    #training the network
-    c = 1
-    learning_constant = 0.1
-    i = 0
-    while i < 1000:
-        i += 1
-        last_c = c
-        c= 0
-
-        for data_point in data_set.data_points:
-            sample_output = convert_to_output(data_point.classification_index, len(data_set.classifications))
-            samples.append(sample_output)
-            set_input_layer(first_layer, data_point.attributes)
-            c += train_network(first_layer, [hidden_layer_1, hidden_layer_2], last_layer, learning_constant, sample_output, 1)
-        itteration += 1
-        print(c / len(data_set.data_points))
-        print("==========" + str(i))
-        
-        #change learning constant based on error
-        if c / len(data_set.data_points) > 0.001:
-            if not learning_constant > 5.0:
-                learning_constant += 0.01
-        else:
-            if learning_constant > 0.04:
-                learning_constant /= 4
-        print(learning_constant)
-
-       
-
-    hits = 0
-
-    #getting validation results
-    print_weights([hidden_layer_1, hidden_layer_2, last_layer])
-    for i in range(len(data_set.data_points)):
-        result = feed_forward_result(data_set.data_points[i].attributes, first_layer, [hidden_layer_1, hidden_layer_2], last_layer)
-        print("===================")
-        print("result:   ", result)
-        print("Expected: ", samples[i])
-        if samples[i] == result:
-            hits += 1
-    print(hits / len(data_set.data_points) * 100)
+    train_network(first_layer, [hidden_layer_1, hidden_layer_2], last_layer)
         
 
 
