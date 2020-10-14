@@ -1,6 +1,23 @@
 import math
 import random
 import csv
+import time
+class DataSet:
+    """Data set class that contains a list with datapoints and corresponding classifications.
+    """
+    def __init__(self, data_points: list, classifications: list):
+        self.data_points = data_points
+        self.classifications = classifications
+
+class DataPoint:
+    """Data point class with attributes and classifaction specified.
+    """
+    def __init__(self, attributes: list, classification_index: int):
+        self.attributes = attributes
+        self.classification_index = classification_index
+        if type(attributes[0]) == str:
+            for i, attribute in enumerate(attributes):
+                self.attributes[i] = float(attribute)
 
 def sigmoid(x):
     """Returns the sigmoid of x
@@ -113,7 +130,6 @@ class NeuralNetwork:
                     sample_output = convert_to_output(data_point.classification_index, len(data_set.classifications))  
                 else:
                     sample_output = correct_output[j]
-                samples.append(sample_output)
                 self.set_input_layer(data_point.attributes)
                 c += self.train_network_session(learning_constant, sample_output)
             itteration += 1
@@ -130,17 +146,7 @@ class NeuralNetwork:
             print("Error value:       ", c / len(data_set.data_points))
 
 
-        hits = 0
-        #getting validation results
-        for i in range(len(data_set.data_points)):
-            result = self.feed_forward_result(data_set.data_points[i].attributes)
-            print("===================")
-            print("result:   ", result)
-            print("Expected: ", samples[i])
-            if samples[i] == result:
-                hits += 1
-        print("Score: ", hits / len(data_set.data_points) * 100)
-
+        
     def train_network_session(self, learning_constant, correct_output):
         """Applies one session of feedforwarding and backward propagation to the neural network.
 
@@ -224,6 +230,24 @@ class NeuralNetwork:
             # results.append(neuron.a)
         return results
 
+    def get_result(self, data_set: DataSet, correct_outputs: list):
+        hits = 0
+        samples = []
+        #getting validation results
+        for i, data_point in enumerate(data_set.data_points):
+            if correct_outputs == None:
+                sample_output = convert_to_output(data_point.classification_index, len(data_set.classifications))  
+            else:
+                sample_output = correct_output[i]
+            samples.append(sample_output)
+            result = self.feed_forward_result(data_set.data_points[i].attributes)
+            print("===================")
+            print("result:   ", result)
+            print("Expected: ", samples[i])
+            if samples[i] == result:
+                hits += 1
+        print("Score: ", hits / len(data_set.data_points) * 100)
+
 class Neuron:
     """A neuron node in a neural network
     """
@@ -301,22 +325,11 @@ class Neuron:
 
 
 
-class DataSet:
-    """Data set class that contains a list with datapoints and corresponding classifications.
-    """
-    def __init__(self, data_points: list, classifications: list):
-        self.data_points = data_points
-        self.classifications = classifications
 
-class DataPoint:
-    """Data point class with attributes and classifaction specified.
-    """
-    def __init__(self, attributes: list, classification_index: int):
-        self.attributes = attributes
-        self.classification_index = classification_index
-        if type(attributes[0]) == str:
-            for i, attribute in enumerate(attributes):
-                self.attributes[i] = float(attribute)
+
+
+
+
 
 
 def import_data_set(url: str, nr_features):
@@ -384,6 +397,10 @@ if __name__ == "__main__":
 
     iris_data_set = import_data_set("dataset.csv", 4)
     iris_data_set = normalize_data(iris_data_set)
+
+    iris_validation_set = import_data_set("validation_set.csv", 4)
+    iris_validation_set = normalize_data(iris_validation_set)
+
     adder_data_set = import_data_set("adder_dataset.csv", 3)
 
     # Adder 
@@ -393,7 +410,10 @@ if __name__ == "__main__":
     network.add_output_layer(2)
     network.join()
     correct_output = [[0,0], [0,0], [0,0],  [0,1],  [0,1],  [1,0],  [0,1],  [1,0],  [1,0],  [1,1],  [1,1],  [1,1],  [1,1]]
-    network.train_network(adder_data_set, 2000, correct_output)
+    network.train_network(adder_data_set, 3000, correct_output)
+    network.get_result(adder_data_set, correct_output)
+
+    time.sleep(3)
 
     # Iris data
     network=NeuralNetwork()
@@ -403,5 +423,6 @@ if __name__ == "__main__":
     network.add_output_layer(3)
     network.join()
     network.train_network(iris_data_set, 1000, None)
+    network.get_result(iris_validation_set, None)
 
 
