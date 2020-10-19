@@ -51,6 +51,15 @@ def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:
 
 
 def find_nearest_cluster(d_point: DataPoint, clusters: List[Cluster]) -> Cluster:
+    """ finds the nearest cluster to the datapoint
+
+    Args:
+        d_point (DataPoint): target 
+        clusters (List[Cluster]): list of clusters
+
+    Return:
+        nearest_cluster(Cluster): the nearest cluster
+    """
     nearest_cluster = None
     shortest_distance = float('inf')
 
@@ -66,6 +75,17 @@ def find_nearest_cluster(d_point: DataPoint, clusters: List[Cluster]) -> Cluster
 
 
 def k_means(k: int = None, training_set: List[DataPoint] = None, in_clusters: Optional[List[Cluster]] = None):
+    """Sorting 
+
+    Args:
+        k(int): amount of clusters
+        training_set(List[DataPoint]: 
+        in_cluster(Optional[List[Cluster]]):
+
+    Return:
+        clusters(List[Cluster]):
+        changes(bool)
+    """
     changes = False
     clusters = in_clusters
 
@@ -134,32 +154,9 @@ def normalize_features(d_set: np.ndarray, input_values: Optional[List[float]] = 
         max_values.append(feature_max)
     return max_values
 
-
-if __name__ == "__main__":
-    # seed random
-    random.seed(0)
-    # import data sets
-    data_set, data_labels = import_data('dataset1.csv', 2000)
-    validation_set, validation_labels = import_data('validation1.csv', 2001)
-
-    # normalize data
-    max_values = normalize_features(data_set)
-    normalize_features(validation_set, max_values)
-
-    data_set = list(data_set)
-    validation_set = list(validation_set)
-
-    #intra cluster distance plot data
-    intra_cluster_distances = []
-    k_sizes = []
-
-
-    for data_point_index, data_point in enumerate(data_set):
-        data_set[data_point_index] = DataPoint(data_point, data_labels[data_point_index])
-
-    for validation_point_index, validation_point in enumerate(validation_set):
-        validation_set[validation_point_index] = DataPoint(validation_point, validation_labels[validation_point_index])
-    
+def supervise_k_means():
+    """runs k means itterations and tests for every cluster size between 1 - 30
+    """
     for k in range(1, 31):
         clusters, _ = k_means(k=k, training_set=data_set)
         intra_cluster_distance = 0
@@ -187,15 +184,40 @@ if __name__ == "__main__":
             if validation_point.classification is nearest_classification:
                 matches += 1
 
-        print(matches * 100 / len(validation_set))
-        print(intra_cluster_distance )
-        intra_cluster_distances.append(intra_cluster_distance)
-        k_sizes.append(k)
-        # for cluster_index, cluster in enumerate(clusters):
-        #     print("############# CLUSTER " + str(cluster_index) + " START #############")
-        #     for point in cluster.data_points:
-        #         print(point.classification)
+    print(matches * 100 / len(validation_set))
+    print(intra_cluster_distance )
+    intra_cluster_distances.append(intra_cluster_distance)
+    k_sizes.append(k)
     plt.plot(k_sizes, intra_cluster_distances)
     plt.ylabel("Intra cluster distance")
     plt.xlabel("K")
     plt.show()
+
+
+
+if __name__ == "__main__":
+    # seed random
+    random.seed(0)
+    # import data sets
+    data_set, data_labels = import_data('dataset1.csv', 2000)
+    validation_set, validation_labels = import_data('validation1.csv', 2001)
+
+    # normalize data
+    max_values = normalize_features(data_set)
+    normalize_features(validation_set, max_values)
+
+    data_set = list(data_set)
+    validation_set = list(validation_set)
+
+    #intra cluster distance plot data
+    intra_cluster_distances = []
+    k_sizes = []
+
+
+    for data_point_index, data_point in enumerate(data_set):
+        data_set[data_point_index] = DataPoint(data_point, data_labels[data_point_index])
+
+    for validation_point_index, validation_point in enumerate(validation_set):
+        validation_set[validation_point_index] = DataPoint(validation_point, validation_labels[validation_point_index])
+    
+    supervise_k_means()
