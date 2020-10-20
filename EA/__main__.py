@@ -48,9 +48,14 @@ class Phenotype:
         if v > 63:
             raise ValueError("given v bigger than 63")
         self._chromosome |= v << 24
+    
+    @property
+    def fitness(self):
+       return ((self._A - self._B)**2 + (self._C + self._D)**2 - (self._A - 30)**2 * (self._A - 30) - (self._C - 40)**3)
+
 
     def randomize_chromosome(self):
-        random_values = [random.randrange(0, 63) for i in range(4)]
+        random_values = [random.randrange(0, 19) for i in range(4)]
         self.encode_chromosome(random_values)
     
     @property
@@ -64,7 +69,6 @@ class Phenotype:
         self._D = parameters[3]
 
     def mutate(self, propability: float):
-        print("rinke;")
         if propability > random.uniform(0, 1):
             pos_to_mutate = random.randrange(0, 24)
             index_to_mutate = (int(pos_to_mutate / 6) + 1) * 2 + pos_to_mutate 
@@ -75,12 +79,15 @@ class Phenotype:
         for _i in range(nr_of_children):
             new_child = Phenotype()
             child_parameters = []
-            for j, mate_parameter in enumerate(mate.decoded_chromosome()):
+            print("-------------------")
+            for j, mate_parameter in enumerate(mate.decoded_chromosome):
                 split = random.randrange(1, 6)
                 mask = 0b0
                 for k in range(split):
-                    self_mask = self_mask ^ (1 << k)
-                child_parameters.append((self.decoded_chromosome[j] & mask) | (mate_parameter & mask ^ 0x3f))
+                    mask = mask ^ (1 << k)
+                parameter = (self.decoded_chromosome[j] & mask) | (mate_parameter & mask ^ 0x3f)
+                print("{0:b}".format(parameter), "{0:b}".format((self.decoded_chromosome[j] & mask)), "{0:b}".format((mate_parameter & mask ^ 0x3f)))
+                child_parameters.append(parameter)
             new_child.encode_chromosome(child_parameters)
             children.append(new_child)
         return children
@@ -99,12 +106,45 @@ def brute_force():
                         out_values = [A, B, C, D]
     return (out_values, max_lift)
 
+def generate_population(size) -> List[Phenotype]:
+    population = []
+    for _ in range(size):
+        individual = Phenotype()
+        individual.randomize_chromosome()
+        population.append(individual)
+    return population
+
+def evaluate(population, nr_of_survivors) -> List[Phenotype]:
+    population.sort(key=lambda phenotype: phenotype.fitness, reverse=False)
+    return population[:nr_of_survivors]
+
+def mutate_population(population, probability):
+    for individual in population:
+            individual.mutate(probability)
+    
+def orgy(population: List[Phenotype], nr_of_children_per_couple):
+    children = []
+    random.shuffle(population)
+    males = population[:int(len(population)/2)]
+    females = population[int(len(population)/2):]
+    couples = zip(males, females)
+    for couple in couples:
+        children = children + couple[0].repopulate(couple[1], nr_of_children_per_couple)
+    return children
 
 
 def main():
-    genotype = Phenotype()
-    genotype.randomize_chromosome()
-    print(genotype.decoded_chromosome)
+    population = generate_population(3)
+    for i in range(1):
+        surviving_population = evaluate(population, 3)
+        population = orgy(surviving_population, 3)
+        mutate_population(population, 0.3)
+        print("============================================", i)
+        for individual in population:
+            print(individual.fitness, individual.decoded_chromosome)
+    
+    
+
 
     
     # for var in brute_force()[0]:
