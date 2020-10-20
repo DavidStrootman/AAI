@@ -51,11 +51,11 @@ class Phenotype:
     
     @property
     def fitness(self):
-       return ((self._A - self._B)**2 + (self._C + self._D)**2 - (self._A - 30)**2 * (self._A - 30) - (self._C - 40)**3)
+       return ((self._A - self._B)**2 + (self._C + self._D)**2 - (self._A - 30)**3 - (self._C - 40)**3)
 
 
     def randomize_chromosome(self):
-        random_values = [random.randrange(0, 19) for i in range(4)]
+        random_values = [random.randrange(0, 63) for i in range(4)]
         self.encode_chromosome(random_values)
     
     @property
@@ -71,7 +71,7 @@ class Phenotype:
     def mutate(self, propability: float):
         if propability > random.uniform(0, 1):
             pos_to_mutate = random.randrange(0, 24)
-            index_to_mutate = (int(pos_to_mutate / 6) + 1) * 2 + pos_to_mutate 
+            index_to_mutate = (int(pos_to_mutate / 6)) * 2 + pos_to_mutate
             self._chromosome = self._chromosome ^ (1 << index_to_mutate)
     
     def repopulate(self, mate: 'Phenotype', nr_of_children: int) -> List['Phenotype']:
@@ -79,14 +79,14 @@ class Phenotype:
         for _i in range(nr_of_children):
             new_child = Phenotype()
             child_parameters = []
-            print("-------------------")
+            # print("-------------------")
             for j, mate_parameter in enumerate(mate.decoded_chromosome):
-                split = random.randrange(1, 6)
+                split = 3
                 mask = 0b0
                 for k in range(split):
                     mask = mask ^ (1 << k)
                 parameter = (self.decoded_chromosome[j] & mask) | (mate_parameter & mask ^ 0x3f)
-                print("{0:b}".format(parameter), "{0:b}".format((self.decoded_chromosome[j] & mask)), "{0:b}".format((mate_parameter & mask ^ 0x3f)))
+                # print("{0:b}".format(parameter), split, "{0:b}".format((self.decoded_chromosome[j] & mask)), "{0:b}".format((mate_parameter & mask ^ 0x3f)))
                 child_parameters.append(parameter)
             new_child.encode_chromosome(child_parameters)
             children.append(new_child)
@@ -114,15 +114,15 @@ def generate_population(size) -> List[Phenotype]:
         population.append(individual)
     return population
 
-def evaluate(population, nr_of_survivors) -> List[Phenotype]:
-    population.sort(key=lambda phenotype: phenotype.fitness, reverse=False)
+def evaluate(population, nr_of_survivors = None, nr_of_failures = None) -> List[Phenotype]:
+    population.sort(key=lambda phenotype: phenotype.fitness, reverse=True)
     return population[:nr_of_survivors]
 
 def mutate_population(population, probability):
     for individual in population:
             individual.mutate(probability)
     
-def orgy(population: List[Phenotype], nr_of_children_per_couple):
+def crossover(population: List[Phenotype], nr_of_children_per_couple):
     children = []
     random.shuffle(population)
     males = population[:int(len(population)/2)]
@@ -134,14 +134,30 @@ def orgy(population: List[Phenotype], nr_of_children_per_couple):
 
 
 def main():
-    population = generate_population(3)
-    for i in range(1):
-        surviving_population = evaluate(population, 3)
-        population = orgy(surviving_population, 3)
-        mutate_population(population, 0.3)
-        print("============================================", i)
-        for individual in population:
+    population = generate_population(300)
+    
+    # for individual in population:
+    #     print(individual.fitness, individual.decoded_chromosome)
+        
+    mutate_population(population, 1)
+    
+    for _ in range(99):
+        children = crossover(population, 2)
+        mutate_population(children, 0.4)
+        population.extend(children)
+        population = evaluate(population, nr_of_failures=3)
+        print("============================================")
+        for individual in population[:5]:
             print(individual.fitness, individual.decoded_chromosome)
+    # surviving_population = evaluate(population, 3)
+    
+    # for i in range(10):
+    #     surviving_population = evaluate(population, 3)
+    #     population = crossover(surviving_population, 2)
+    #     mutate_population(population, 0.3)
+    #     print("============================================", i)
+    #     for individual in population:
+    #         print(individual.fitness, individual.decoded_chromosome)
     
     
 
