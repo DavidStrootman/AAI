@@ -56,3 +56,6 @@ def normalize_features(d_set: np.ndarray, input_values: Optional[List[float]] = 
         List[float]: list of feature maximum values
     """
 
+def supervise_k_means():
+    """runs k means until the clusters stop changing for every cluster (K) size between 1 - 30 
+    """

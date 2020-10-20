@@ -20,15 +20,6 @@ class Cluster:
 
 
 def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:
-    # (): For some reason this line fixes a bug in liveshare that causes docstrings to be inverted
-    """ import a csv file for use by k_nn
-
-    Args:
-        filename (str): name of the file to import
-        year (int): the year the data in the file is from
-    Returns:
-        Tuple[np.ndarray, List[str]]: ndarray containing data and a list containing classifications
-    """
     data: np.ndarray = np.genfromtxt(filename, delimiter=';', usecols=[1, 2, 3, 4, 5, 6, 7],
                                      converters={5: lambda s: 0 if s == b"-1" else float(s),
                                                  7: lambda s: 0 if s == b"-1" else float(s)})
@@ -51,15 +42,6 @@ def import_data(filename: str, year: int) -> Tuple[np.ndarray, List[str]]:
 
 
 def find_nearest_cluster(d_point: DataPoint, clusters: List[Cluster]) -> Cluster:
-    """ finds the nearest cluster to the datapoint
-
-    Args:
-        d_point (DataPoint): target 
-        clusters (List[Cluster]): list of clusters
-
-    Return:
-        nearest_cluster(Cluster): the nearest cluster
-    """
     nearest_cluster = None
     shortest_distance = float('inf')
 
@@ -75,17 +57,6 @@ def find_nearest_cluster(d_point: DataPoint, clusters: List[Cluster]) -> Cluster
 
 
 def k_means(k: int = None, training_set: List[DataPoint] = None, in_clusters: Optional[List[Cluster]] = None):
-    """Sorting 
-
-    Args:
-        k(int): amount of clusters
-        training_set(List[DataPoint]: 
-        in_cluster(Optional[List[Cluster]]):
-
-    Return:
-        clusters(List[Cluster]):
-        changes(bool)
-    """
     changes = False
     clusters = in_clusters
 
@@ -127,18 +98,6 @@ def k_means(k: int = None, training_set: List[DataPoint] = None, in_clusters: Op
 
 
 def normalize_features(d_set: np.ndarray, input_values: Optional[List[float]] = None) -> List[float]:
-    # (): For some reason this line fixes a bug in liveshare that causes docstrings to be inverted
-    """ normalize any data set to a percentage range (0-100)
-    if input_values is specified, it will use these values as the maximum of the range
-
-    Args:
-        d_set (np.ndarray): data set to normalize
-        input_values (List[float], optional): optional list of maximums to overwrite data_set maximum values.
-            Defaults to None.
-
-    Returns:
-        List[float]: list of feature maximum values
-    """
     max_values: List[float] = []
 
     for feature_index in range(len(d_set[0])):  # first data point
@@ -155,8 +114,6 @@ def normalize_features(d_set: np.ndarray, input_values: Optional[List[float]] = 
     return max_values
 
 def supervise_k_means():
-    """runs k means itterations and tests for every cluster size between 1 - 30
-    """
     for k in range(1, 31):
         clusters, _ = k_means(k=k, training_set=data_set)
         intra_cluster_distance = 0
@@ -184,14 +141,9 @@ def supervise_k_means():
             if validation_point.classification is nearest_classification:
                 matches += 1
 
-    print(matches * 100 / len(validation_set))
-    print(intra_cluster_distance )
-    intra_cluster_distances.append(intra_cluster_distance)
-    k_sizes.append(k)
-    plt.plot(k_sizes, intra_cluster_distances)
-    plt.ylabel("Intra cluster distance")
-    plt.xlabel("K")
-    plt.show()
+        intra_cluster_distances.append(intra_cluster_distance)
+        k_sizes.append(k)
+
 
 
 
@@ -221,3 +173,8 @@ if __name__ == "__main__":
         validation_set[validation_point_index] = DataPoint(validation_point, validation_labels[validation_point_index])
     
     supervise_k_means()
+
+    plt.plot(k_sizes, intra_cluster_distances)
+    plt.ylabel("Intra cluster distance")
+    plt.xlabel("K")
+    plt.show()
