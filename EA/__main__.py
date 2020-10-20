@@ -1,6 +1,6 @@
 from typing import List
 import random
-
+import time
 class Phenotype:
     """Phenotype
     
@@ -74,14 +74,14 @@ class Phenotype:
             index_to_mutate = (int(pos_to_mutate / 6)) * 2 + pos_to_mutate
             self._chromosome = self._chromosome ^ (1 << index_to_mutate)
     
-    def repopulate(self, mate: 'Phenotype', nr_of_children: int) -> List['Phenotype']:
+    def old_repopulate(self, mate: 'Phenotype', nr_of_children: int) -> List['Phenotype']:
         children = []
         for _i in range(nr_of_children):
             new_child = Phenotype()
             child_parameters = []
             # print("-------------------")
             for j, mate_parameter in enumerate(mate.decoded_chromosome):
-                split = 3
+                split = random.randrange(1, 6)
                 mask = 0b0
                 for k in range(split):
                     mask = mask ^ (1 << k)
@@ -92,6 +92,17 @@ class Phenotype:
             children.append(new_child)
         return children
 
+    def repopulate(self, mate: 'Phenotype', nr_of_children: int) -> List['Phenotype']:
+        children = []
+        for _i in range(nr_of_children):
+            new_child = Phenotype()
+            child_parameters = []
+            parameters = self.decoded_chromosome
+            parameters[1] = mate.decoded_chromosome[1]
+            parameters[3] = mate.decoded_chromosome[3]
+            new_child.encode_chromosome(parameters)
+            children.append(new_child)
+        return(children)
 
 def brute_force():
     max_lift = 0
@@ -135,38 +146,24 @@ def crossover(population: List[Phenotype], nr_of_children_per_couple):
 
 def main():
     population = generate_population(300)
-    
-    # for individual in population:
-    #     print(individual.fitness, individual.decoded_chromosome)
-        
     mutate_population(population, 1)
     
-    for _ in range(99):
+    time_start = time.time_ns()
+    for i in range(30):
         children = crossover(population, 2)
-        mutate_population(children, 0.4)
+        mutate_population(children, 0.5)
         population.extend(children)
-        population = evaluate(population, nr_of_failures=3)
-        print("============================================")
-        for individual in population[:5]:
+        population = evaluate(population, nr_of_survivors=150)
+        print("============================================ generation:", i)
+        for individual in population[:3]:
             print(individual.fitness, individual.decoded_chromosome)
-    # surviving_population = evaluate(population, 3)
-    
-    # for i in range(10):
-    #     surviving_population = evaluate(population, 3)
-    #     population = crossover(surviving_population, 2)
-    #     mutate_population(population, 0.3)
-    #     print("============================================", i)
-    #     for individual in population:
-    #         print(individual.fitness, individual.decoded_chromosome)
-    
-    
+    time_end = time.time_ns() - time_start
+    print("EA takes:", time_end / 1000000000)
 
-
-    
-    # for var in brute_force()[0]:
-    #     print(var)
-    #     print()
-
+    time_start = time.time_ns()
+    brute_force()
+    time_end = time.time_ns() - time_start
+    print("Brute force takes:", time_end / 1000000000)
 
 if __name__ == "__main__":
     main()
