@@ -6,14 +6,13 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Dropout, Flatten, MaxPooling2D
 
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-image_index = 7777 # You may select anything up to 60,000
-print(y_train[image_index]) # The label is 8
+image_index = 1
+print(y_train[image_index]) 
 plt.imshow(x_train[image_index], cmap='Greys')
 
 # Reshaping the array to 4-dims so that it can work with the Keras API
 x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
 x_test = x_test.reshape(x_test.shape[0], 28, 28, 1)
-input_shape = (28, 28, 1)
 # Making sure that the values are float so that we can get decimal points after division
 x_train = x_train.astype('float32')
 x_test = x_test.astype('float32')
@@ -26,6 +25,7 @@ print('Number of images in x_train', x_train.shape[0])
 print('Number of images in x_test', x_test.shape[0])
 
 # Creating a Sequential Model and adding the layers
+input_shape = (28, 28, 1)
 model = Sequential()
 model.add(Conv2D(28, kernel_size=(3,3), input_shape=input_shape))
 model.add(MaxPooling2D(pool_size=(2, 2)))

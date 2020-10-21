@@ -1,11 +1,8 @@
 from typing import List
 import random
 import time
+
 class Phenotype:
-    """Phenotype
-    
-    00 DDDDDD 00 CCCCCC 00 BBBBBB 00 AAAAAA
-    """
     def __init__(self):
         self._chromosome: int = 0
         
@@ -14,7 +11,7 @@ class Phenotype:
         return self._chromosome & 0x3F
     
     @_A.setter
-    def _A(self, v: int):
+    def _A(self, v: int):     
         if v > 63:
             raise ValueError("given v bigger than 63")
         self._chromosome |= v << 0
@@ -24,17 +21,17 @@ class Phenotype:
         return (self._chromosome & 0x3F00) >> 8
     
     @_B.setter
-    def _B(self, v: int):
+    def _B(self, v: int):     
         if v > 63:
             raise ValueError("given v bigger than 63")
         self._chromosome |= v << 8
 
     @property
-    def _C(self):
+    def _C(self):   
         return (self._chromosome & 0x3F0000) >> 16
     
     @_C.setter
-    def _C(self, v: int):
+    def _C(self, v: int):       
         if v > 63:
             raise ValueError("given v bigger than 63")
         self._chromosome |= v << 16
@@ -44,14 +41,14 @@ class Phenotype:
         return (self._chromosome & 0x3F000000) >> 24
         
     @_D.setter
-    def _D(self, v: int):
+    def _D(self, v: int):   
         if v > 63:
             raise ValueError("given v bigger than 63")
         self._chromosome |= v << 24
     
     @property
     def fitness(self):
-       return ((self._A - self._B)**2 + (self._C + self._D)**2 - (self._A - 30)**3 - (self._C - 40)**3)
+        return ((self._A - self._B)**2 + (self._C + self._D)**2 - (self._A - 30)**3 - (self._C - 40)**3)
 
 
     def randomize_chromosome(self):
@@ -62,7 +59,7 @@ class Phenotype:
     def decoded_chromosome(self):
         return [self._A, self._B, self._C, self._D]
     
-    def encode_chromosome(self, parameters: List[int]):
+    def encode_chromosome(self, parameters: List[int]):      
         self._A = parameters[0]
         self._B = parameters[1]
         self._C = parameters[2]
@@ -74,27 +71,39 @@ class Phenotype:
             index_to_mutate = (int(pos_to_mutate / 6)) * 2 + pos_to_mutate
             self._chromosome = self._chromosome ^ (1 << index_to_mutate)
     
-    def old_repopulate(self, mate: 'Phenotype', nr_of_children: int) -> List['Phenotype']:
-        children = []
-        for _i in range(nr_of_children):
-            new_child = Phenotype()
-            child_parameters = []
-            # print("-------------------")
-            for j, mate_parameter in enumerate(mate.decoded_chromosome):
-                split = random.randrange(1, 6)
-                mask = 0b0
-                for k in range(split):
-                    mask = mask ^ (1 << k)
-                parameter = (self.decoded_chromosome[j] & mask) | (mate_parameter & mask ^ 0x3f)
-                # print("{0:b}".format(parameter), split, "{0:b}".format((self.decoded_chromosome[j] & mask)), "{0:b}".format((mate_parameter & mask ^ 0x3f)))
-                child_parameters.append(parameter)
-            new_child.encode_chromosome(child_parameters)
-            children.append(new_child)
-        return children
+    # def old_repopulate(self, mate: 'Phenotype', nr_of_children: int) -> List['Phenotype']:
+    #     """
+    #     Description of old_repopulate
 
-    def repopulate(self, mate: 'Phenotype', nr_of_children: int) -> List['Phenotype']:
+    #     Args:
+    #         self (undefined):
+    #         mate ('Phenotype'):
+    #         nr_of_children (int):
+
+    #     Returns:
+    #         List['Phenotype']
+
+    #     """
+    #     children = []
+    #     for _i in range(nr_of_children):
+    #         new_child = Phenotype()
+    #         child_parameters = []
+    #         # print("-------------------")
+    #         for j, mate_parameter in enumerate(mate.decoded_chromosome):
+    #             split = random.randrange(1, 6)
+    #             mask = 0b0
+    #             for k in range(split):
+    #                 mask = mask ^ (1 << k)
+    #             parameter = (self.decoded_chromosome[j] & mask) | (mate_parameter & mask ^ 0x3f)
+    #             # print("{0:b}".format(parameter), split, "{0:b}".format((self.decoded_chromosome[j] & mask)), "{0:b}".format((mate_parameter & mask ^ 0x3f)))
+    #             child_parameters.append(parameter)
+    #         new_child.encode_chromosome(child_parameters)
+    #         children.append(new_child)
+    #     return children
+
+    def repopulate(self, mate: 'Phenotype', nr_of_children: int) -> List['Phenotype']:         
         children = []
-        for _i in range(nr_of_children):
+        for i in range(nr_of_children):
             new_child = Phenotype()
             child_parameters = []
             parameters = self.decoded_chromosome
@@ -144,13 +153,13 @@ def crossover(population: List[Phenotype], nr_of_children_per_couple):
     return children
 
 
-def main():
+def main():   
     population = generate_population(300)
     mutate_population(population, 1)
     
     time_start = time.time_ns()
     for i in range(30):
-        children = crossover(population, 2)
+        children = crossover(population, 1)
         mutate_population(children, 0.5)
         population.extend(children)
         population = evaluate(population, nr_of_survivors=150)
