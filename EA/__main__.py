@@ -73,9 +73,8 @@ class Phenotype:
 
     def repopulate(self, mate: 'Phenotype', nr_of_children: int) -> List['Phenotype']:         
         children = []
-        for i in range(nr_of_children):
+        for _ in range(nr_of_children):
             new_child = Phenotype()
-            child_parameters = []
             parameters = self.decoded_chromosome
             parameters[1] = mate.decoded_chromosome[1]
             parameters[3] = mate.decoded_chromosome[3]
