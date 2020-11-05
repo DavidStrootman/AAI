@@ -91,7 +91,7 @@ class NeuralNetwork:
                 if correct_outputs == None:
                     sample_output = convert_to_output(data_point.classification_index, len(data_set.classifications))  
                 else:
-                    sample_output = correct_output[j]
+                    sample_output = correct_outputs[j]
                 self.set_input_layer(data_point.attributes)
                 c += self.train_network_session(learning_constant, sample_output)
             itteration += 1
@@ -158,7 +158,7 @@ class NeuralNetwork:
             if correct_outputs == None:
                 sample_output = convert_to_output(data_point.classification_index, len(data_set.classifications))  
             else:
-                sample_output = correct_output[i]
+                sample_output = correct_outputs[i]
             samples.append(sample_output)
             result = self.feed_forward_result(data_set.data_points[i].attributes)
             print("===================")
@@ -166,6 +166,7 @@ class NeuralNetwork:
             print("Expected: ", samples[i])
             if samples[i] == result:
                 hits += 1
+        print("Score: ", hits, "/", len(data_set.data_points))
         print("Score: ", hits / len(data_set.data_points) * 100)
 
 class Neuron:
@@ -266,6 +267,7 @@ if __name__ == "__main__":
     iris_validation_set = normalize_data(iris_validation_set)
 
     adder_data_set = import_data_set("adder_dataset.csv", 3)
+    expected_output_adder = [[0,0], [0,0], [0,0],  [0,1],  [0,1],  [1,0],  [0,1],  [1,0],  [1,0],  [1,1],  [1,1],  [1,1],  [1,1]]
 
     # Adder 
     network=NeuralNetwork()
@@ -273,9 +275,8 @@ if __name__ == "__main__":
     network.add_hidden_layer(3)
     network.add_output_layer(2)
     network.join()
-    correct_output = [[0,0], [0,0], [0,0],  [0,1],  [0,1],  [1,0],  [0,1],  [1,0],  [1,0],  [1,1],  [1,1],  [1,1],  [1,1]]
-    network.train_network(adder_data_set, 3000, correct_output)
-    network.get_result(adder_data_set, correct_output)
+    network.train_network(adder_data_set, 3000, expected_output_adder)
+    network.get_result(adder_data_set, expected_output_adder)
 
     time.sleep(3)
 
