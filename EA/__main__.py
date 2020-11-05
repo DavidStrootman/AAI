@@ -2,6 +2,7 @@ from typing import List
 import random
 import time
 
+
 class Phenotype:
     def __init__(self):
         self._chromosome: int = 0
@@ -48,8 +49,7 @@ class Phenotype:
     
     @property
     def fitness(self):
-        return ((self._A - self._B)**2 + (self._C + self._D)**2 - (self._A - 30)**3 - (self._C - 40)**3)
-
+        return (self._A - self._B)**2 + (self._C + self._D)**2 - (self._A - 30)**3 - (self._C - 40)**3
 
     def randomize_chromosome(self):
         random_values = [random.randrange(0, 63) for i in range(4)]
@@ -70,36 +70,6 @@ class Phenotype:
             pos_to_mutate = random.randrange(0, 24)
             index_to_mutate = (int(pos_to_mutate / 6)) * 2 + pos_to_mutate
             self._chromosome = self._chromosome ^ (1 << index_to_mutate)
-    
-    # def old_repopulate(self, mate: 'Phenotype', nr_of_children: int) -> List['Phenotype']:
-    #     """
-    #     Description of old_repopulate
-
-    #     Args:
-    #         self (undefined):
-    #         mate ('Phenotype'):
-    #         nr_of_children (int):
-
-    #     Returns:
-    #         List['Phenotype']
-
-    #     """
-    #     children = []
-    #     for _i in range(nr_of_children):
-    #         new_child = Phenotype()
-    #         child_parameters = []
-    #         # print("-------------------")
-    #         for j, mate_parameter in enumerate(mate.decoded_chromosome):
-    #             split = random.randrange(1, 6)
-    #             mask = 0b0
-    #             for k in range(split):
-    #                 mask = mask ^ (1 << k)
-    #             parameter = (self.decoded_chromosome[j] & mask) | (mate_parameter & mask ^ 0x3f)
-    #             # print("{0:b}".format(parameter), split, "{0:b}".format((self.decoded_chromosome[j] & mask)), "{0:b}".format((mate_parameter & mask ^ 0x3f)))
-    #             child_parameters.append(parameter)
-    #         new_child.encode_chromosome(child_parameters)
-    #         children.append(new_child)
-    #     return children
 
     def repopulate(self, mate: 'Phenotype', nr_of_children: int) -> List['Phenotype']:         
         children = []
@@ -111,7 +81,8 @@ class Phenotype:
             parameters[3] = mate.decoded_chromosome[3]
             new_child.encode_chromosome(parameters)
             children.append(new_child)
-        return(children)
+        return children
+
 
 def brute_force():
     max_lift = 0
@@ -120,11 +91,12 @@ def brute_force():
         for B in range(64):
             for C in range(64):
                 for D in range(64):
-                    lift = (A - B)*(A - B) + (C + D) * (C + D) - (A - 30) * (A - 30) * (A - 30) - (C - 40) * (C - 40) * (C - 40)
+                    lift = (A - B)**2 + (C + D)**2 - (A - 30)**3 - (C - 40)**3
                     if lift > max_lift:
                         max_lift = lift
                         out_values = [A, B, C, D]
-    return (out_values, max_lift)
+    return out_values, max_lift
+
 
 def generate_population(size) -> List[Phenotype]:
     population = []
@@ -134,14 +106,17 @@ def generate_population(size) -> List[Phenotype]:
         population.append(individual)
     return population
 
+
 def evaluate(population, nr_of_survivors = None, nr_of_failures = None) -> List[Phenotype]:
     population.sort(key=lambda phenotype: phenotype.fitness, reverse=True)
     return population[:nr_of_survivors]
 
+
 def mutate_population(population, probability):
     for individual in population:
             individual.mutate(probability)
-    
+
+
 def crossover(population: List[Phenotype], nr_of_children_per_couple):
     children = []
     random.shuffle(population)
@@ -173,6 +148,7 @@ def main():
     brute_force()
     time_end = time.time_ns() - time_start
     print("Brute force takes:", time_end / 1000000000)
+
 
 if __name__ == "__main__":
     main()
