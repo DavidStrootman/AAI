@@ -17,7 +17,7 @@ validation_images /= 255
 
 model = Sequential()
 
-# Convolution layer om rekentijd te besparen
+# Een convolution layer om de relatie van omliggende pixels te behouden
 input_shape = (28, 28, 1)
 model.add(Conv2D(28, kernel_size=(3,3), input_shape=input_shape))
 
@@ -37,16 +37,8 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 model.fit(training_images,training_image_values)
-
 model.evaluate(validation_images, validation_image_values)
 
-hits = 0
-test_count = 300
-for i in range(test_count):
-    pred = model.predict(validation_images[i].reshape(1, 28, 28, 1))
-    hits += 1 if pred.argmax() == validation_image_values[i] else 0
-
-print("{}%".format(hits / test_count * 100))
 
 
 
