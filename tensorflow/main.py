@@ -17,7 +17,7 @@ validation_images /= 255
 
 model = Sequential()
 
-# Een convolution layer om de relatie van omliggende pixels te behouden
+# Een convolution layer om de relatie tussen omliggende pixels te behouden
 input_shape = (28, 28, 1)
 model.add(Conv2D(28, kernel_size=(3,3), input_shape=input_shape))
 

@@ -2,6 +2,8 @@ import math
 import random
 import csv
 import time
+from typing import List
+
 class DataSet:
     def __init__(self, data_points: list, classifications: list):
         self.data_points = data_points
@@ -15,19 +17,13 @@ class DataPoint:
             for i, attribute in enumerate(attributes):
                 self.attributes[i] = float(attribute)
 
-def sigmoid(x):
+def sigmoid(x) -> float:
     return 1 / (1 + math.e **-x)
 
 class Input:
     def __init__ (self, value):
         self.a = value
         self.delta = 0
-    
-    def calculate_a(self):
-        return
-
-    def get_delta_weights_next_layer(self):
-        return 0
 
 class NeuralNetwork:
     def __init__(self):
@@ -35,24 +31,24 @@ class NeuralNetwork:
         self.hidden_layers = []
         self.last_layer = []
 
-    def add_input_layer(self, nr_inputs: int):
+    def add_input_layer(self, nr_inputs: int) -> None:
         for neuron in range(nr_inputs):
             self.first_layer.append(Input(0.0))
     
-    def add_hidden_layer(self, nr_neurons: int):
+    def add_hidden_layer(self, nr_neurons: int) -> None:
         self.hidden_layers.append([])
         index = len(self.hidden_layers) - 1
         for neuron in range(nr_neurons):
             self.hidden_layers[index].append(Neuron(None, None))
 
-    def add_output_layer(self, nr_neurons: int):
+    def add_output_layer(self, nr_neurons: int) -> None:
         for neuron in range(nr_neurons):
             self.last_layer.append(Neuron(None, None))
 
-    def join(self):
+    def join(self) -> None:
         index = 0
         last = len(self.hidden_layers) - 1
-        if self.hidden_layers != None:
+        if self.hidden_layers:
             for layer in self.hidden_layers:
                 for neuron in layer:
                     if index == 0:
@@ -73,12 +69,10 @@ class NeuralNetwork:
             for layer in self.hidden_layers:
                 for neuron in layer:
                     neuron.generate_weights()
-            return 1
         else:
-            print("No hiddenlayers invalid operation")
-            return 0
+            raise RuntimeError("No hidden layers: invalid operation")
 
-    def train_network(self, data_set, sessions, correct_outputs=None):
+    def train_network(self, data_set, sessions, correct_outputs=None) -> None:
         itteration = 0
         samples = []
         c = 1
@@ -109,7 +103,7 @@ class NeuralNetwork:
 
 
         
-    def train_network_session(self, learning_constant, correct_output):
+    def train_network_session(self, learning_constant, correct_output) -> float:
         for hidden_layer in self.hidden_layers:
             self.feed_forward_layer(hidden_layer)
 
@@ -121,25 +115,25 @@ class NeuralNetwork:
             self.update_weights_layer(hidden_layer, learning_constant)
         return c 
 
-    def feed_forward_layer(self, layer: list):
+    def feed_forward_layer(self, layer: list) -> None:
         for neuron in layer:
             neuron.update_a() 
     
-    def update_weights_layer(self, layer: list, learning_constant: float):
+    def update_weights_layer(self, layer: list, learning_constant: float) -> None:
         for neuron in layer:
             neuron.update_weights(learning_constant)
 
-    def set_input_layer(self, input_data: list):
+    def set_input_layer(self, input_data: list) -> None:
         for i, neuron in enumerate(self.first_layer):
             neuron.a = input_data[i]
 
-    def update_last_layer(self, last_layer: list, y_list: list):
+    def update_last_layer(self, last_layer: list, y_list: list) -> float:
         c = 0
         for i, neuron in enumerate(last_layer):
             c += neuron.calculate_last(y_list[i])
         return abs(c)
 
-    def feed_forward_result(self, attributes):
+    def feed_forward_result(self, attributes) -> List[int]:
         self.set_input_layer(attributes)
         for hidden_layer in self.hidden_layers:
             self.feed_forward_layer(hidden_layer)
@@ -150,7 +144,7 @@ class NeuralNetwork:
             # results.append(neuron.a)
         return results
 
-    def get_result(self, data_set: DataSet, correct_outputs: list):
+    def get_result(self, data_set: DataSet, correct_outputs: list) -> None:
         hits = 0
         samples = []
         #getting validation results
@@ -182,41 +176,41 @@ class Neuron:
 
         self.generate_weights()
 
-    def generate_weights(self):
+    def generate_weights(self) -> None:
         if(self.previous_layer != None):
             for i in range(len(self.previous_layer)):
                 self.weights.append(random.randrange(-100, 100, 1) /100)
 
-    def update_a(self):
+    def update_a(self) -> None:
         self.a = 0
         self.z = 0
         for i, input_i in enumerate(self.previous_layer):
             self.z += self.weights[i] * input_i.a + self.bias
         self.a = sigmoid(self.z)
 
-    def calculate_last(self, y_value):
+    def calculate_last(self, y_value) -> float:
         self.update_a() 
         self.delta = (sigmoid(self.z) * (1 - sigmoid(self.z))) * (y_value - self.a)
-        return (y_value - self.a)
+        return y_value - self.a
 
-    def get_delta_weights_next_layer(self):
+    def get_delta_weights_next_layer(self) -> float:
         value = 0
         index = self.next_layer[0].previous_layer.index(self)
         for output_neuron in self.next_layer:
             value += output_neuron.weights[index] * output_neuron.delta
         return value
 
-    def back_propegation(self):
+    def back_propegation(self) -> None:
         if self.next_layer is not None:
             self.delta = (sigmoid(self.z) * (1 - sigmoid(self.z))) * self.get_delta_weights_next_layer()
 
-    def update_weights(self, learning_constant: float):
+    def update_weights(self, learning_constant: float) -> None:
         self.back_propegation()
         for i, input_i in enumerate(self.previous_layer):
             self.weights[i] += learning_constant * self.delta * input_i.a
         self.bias += self.delta * learning_constant
 
-def import_data_set(url: str, nr_features):
+def import_data_set(url: str, nr_features) -> DataSet:
     data_set = []
     classifications = []
     with open(url, newline='') as csvfile:
@@ -228,7 +222,7 @@ def import_data_set(url: str, nr_features):
             data_set.append(DataPoint(l[0:nr_features], classifications.index(l[nr_features])))
     return DataSet(data_set, classifications)
 
-def normalize_data(data_set: DataSet):
+def normalize_data(data_set: DataSet) -> DataSet:
     max_features = []
     first_run = True
     #get highest valiue for every feature
@@ -247,14 +241,9 @@ def normalize_data(data_set: DataSet):
 
     return data_set
 
-def convert_to_output(index: int, list_size: int):
-    output = []
-    for i in range(list_size):
-        if i == index:
-            output.append(1)
-        else:
-            output.append(0)
-    return output
+def convert_to_output(index: int, list_size: int) -> List[int]:
+    return [1 if i == index else 0 for i in range(list_size)] # Pythonic magic
+
 
 
     
